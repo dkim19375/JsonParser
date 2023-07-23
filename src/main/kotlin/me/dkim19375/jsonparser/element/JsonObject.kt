@@ -24,5 +24,23 @@
 
 package me.dkim19375.jsonparser.element
 
-class JsonObject : JsonElement() {
+class JsonObject(private val elements: Map<String, JsonElement>) : JsonElement() {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as JsonObject
+
+        return elements == other.elements
+    }
+
+    override fun hashCode(): Int {
+        return elements.hashCode()
+    }
+
+    override fun toString(): String {
+        return "JsonObject(elements=$elements)"
+    }
+
 }

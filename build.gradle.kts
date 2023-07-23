@@ -25,6 +25,8 @@ dependencies {
     compileOnly("org.jetbrains:annotations:24.0.1")
 
     implementation("io.github.dkim19375:dkimcore:1.4.2")
+
+    testImplementation(kotlin("test"))
 }
 
 tasks {
@@ -34,5 +36,9 @@ tasks {
 
     build {
         dependsOn(licenseFormat)
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }

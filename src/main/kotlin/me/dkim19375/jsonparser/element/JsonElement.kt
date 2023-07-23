@@ -25,4 +25,19 @@
 package me.dkim19375.jsonparser.element
 
 open class JsonElement {
+    fun isPrimitive(): Boolean = this is JsonPrimitive
+
+    fun asPrimitive(): JsonPrimitive = this as JsonPrimitive
+
+    fun isList(): Boolean = this is JsonList
+
+    fun asList(): JsonList = this as JsonList
+
+    fun isObject(): Boolean = this is JsonObject
+
+    fun asObject(): JsonObject = this as JsonObject
+
+    override fun toString(): String {
+        return "JsonElement()"
+    }
 }

@@ -32,29 +32,137 @@ import me.dkim19375.jsonparser.error.JsonParseException
 import me.dkim19375.jsonparser.util.StringCharIterator
 
 object JsonParser {
-    fun parse(text: String): JsonElement = parseValue(StringCharIterator(text))
+    fun parse(text: String): JsonElement {
+        val iterator = StringCharIterator(text)
+        val element = parseValue(iterator)
+        iterator.skipWhitespaces()
+        if (iterator.hasNext()) {
+            throw JsonParseException("Json text has extra text: ${iterator.getRemainingText()}")
+        }
+        return element
+    }
 
     private fun parseValue(text: StringCharIterator): JsonElement {
         text.skipWhitespaces()
-        val char = text.peek()
-        if (char == '{') {
-            return parseObject(text)
+        val char = text.peekOrNull() ?: throw JsonParseException("Json value is empty")
+        return when (char) {
+            '{' -> parseObject(text)
+            '[' -> parseList(text)
+            else -> parsePrimitive(text)
         }
-        if (char == '[') {
-            return parseList(text)
-        }
-        return parsePrimitive(text)
     }
 
     private fun parseObject(text: StringCharIterator): JsonObject {
-        TODO()
+        text.skipWhitespaces()
+        if (text.nextCharOrNull() != '{') {
+            throw JsonParseException("Object must start with {")
+        }
+        var key = ""
+        val map = hashMapOf<String, JsonElement>()
+        var endsWithComma = false
+        var endsWithValue = false
+        var endsWithKey = false
+        var endsWithColon = false
+        while (true) {
+            text.skipWhitespaces()
+            val char = text.peekOrNull() ?: throw JsonParseException("Object incomplete")
+
+            if (char == '}') {
+                if (map.isNotEmpty()) {
+                    if (!endsWithValue) {
+                        throw JsonParseException("An object needs to end with a value or be empty")
+                    }
+                }
+                text.nextChar()
+                break
+            }
+
+            if (char == ',') {
+                if (!endsWithValue) {
+                    throw JsonParseException("An object can only have a comma after a value")
+                }
+                endsWithComma = true
+                endsWithValue = false
+                text.nextChar()
+                continue
+            }
+
+            if (char == ':') {
+                if (!endsWithKey) {
+                    throw JsonParseException("An object can only have a colon after a key")
+                }
+                endsWithColon = true
+                endsWithKey = false
+                text.nextChar()
+                continue
+            }
+
+            if (endsWithColon) {
+                // parsing value
+                map[key] = parseValue(text)
+                endsWithColon = false
+                endsWithValue = true
+                continue
+            }
+
+            // parsing key
+            if (map.isNotEmpty()) {
+                if (!endsWithComma) {
+                    throw JsonParseException("An object can only have a key after a comma")
+                }
+                endsWithComma = false
+            }
+            if (endsWithValue) {
+                throw JsonParseException("An object needs to have a comma after each key-value pair")
+            }
+            if (endsWithKey) {
+                throw JsonParseException("An object needs to have a colon between each key-value pair")
+            }
+            key = parseString(text)
+            endsWithKey = true
+        }
+        return JsonObject(map)
     }
 
     private fun parseList(text: StringCharIterator): JsonList {
-        TODO()
+        text.skipWhitespaces()
+        if (text.nextCharOrNull() != '[') {
+            throw JsonParseException("List must start with [")
+        }
+        val list = arrayListOf<JsonElement>()
+        var endsWithComma = false
+        var endsWithValue = false
+        while (true) {
+            text.skipWhitespaces()
+            val char = text.peekOrNull() ?: throw JsonParseException("List incomplete")
+            if (char == ']') {
+                if (endsWithComma) {
+                    throw JsonParseException("Cannot end a list with a comma")
+                }
+                text.nextChar()
+                break
+            }
+            if (char == ',') {
+                if (endsWithComma) {
+                    throw JsonParseException("Cannot have multiple commas in a row in a list")
+                }
+                endsWithComma = true
+                endsWithValue = false
+                text.nextChar()
+                continue
+            }
+            if (endsWithValue) {
+                throw JsonParseException("Needs a comma between each value in a list")
+            }
+            list.add(parseValue(text))
+            endsWithComma = false
+            endsWithValue = true
+        }
+        return JsonList(list)
     }
 
     private fun parsePrimitive(text: StringCharIterator): JsonPrimitive {
+        text.skipWhitespaces()
         val char = text.peek()
         if (char == '"') {
             return JsonPrimitive(parseString(text))
@@ -74,17 +182,18 @@ object JsonParser {
             text.attemptGetText("null") { throw JsonParseException("Invalid json (attempted primitive)") }
             return JsonPrimitive(null)
         }
-        throw JsonParseException("Invalid json (attempted primitive)")
+        throw JsonParseException("Invalid json (attempted primitive) - got ${text.getRemainingText()}")
     }
 
     private fun parseNumber(text: StringCharIterator): Double {
+        text.skipWhitespaces()
         val builder = StringBuilder()
         var hasDecimal = false
         var first = true
         var leadingZero = false
         var isExponential = false
         test@ while (true) {
-            val char = text.nextCharOrNull() ?: if (first) {
+            val char = text.peekOrNull() ?: if (first) {
                 throw JsonParseException("Number is incomplete")
             } else break@test
 
@@ -104,6 +213,8 @@ object JsonParser {
                     }
                     isExponential = true
                     first = true
+                    builder.append(char)
+                    text.nextChar()
                     continue
                 }
                 if (char == '+') {
@@ -112,6 +223,7 @@ object JsonParser {
                 if (char == '-') {
                     if (wasFirst && !hasDecimal) {
                         builder.append('-')
+                        text.nextChar()
                         continue
                     }
                     throw JsonParseException("A - can only be used in a number after E/e or before the number")
@@ -126,37 +238,49 @@ object JsonParser {
                     hasDecimal = true
                     first = true
                     builder.append(char)
+                    text.nextChar()
                     continue
                 }
                 if (char !in '0'..'9') {
-                    throw JsonParseException("Digits in a number must be between 0 and 9")
+                    if (wasFirst) {
+                        throw JsonParseException("Digits in a number must be between 0 and 9 - got $char")
+                    }
+                    break@test
                 }
                 if (char == '0' && wasFirst && !hasDecimal) {
                     leadingZero = true
                     builder.append(char)
+                    text.nextChar()
                     continue
                 }
                 if (wasLeadingZero) {
                     throw JsonParseException("Number cannot have leading zeros")
                 }
                 builder.append(char)
+                text.nextChar()
                 continue
             }
             if (wasFirst) {
                 if (char == '+' || char == '-') {
                     builder.append(char)
+                    text.nextChar()
                     continue
                 }
             }
             if (char !in '0'..'9') {
-                throw JsonParseException("Digits in a number after E/e must be between 0 and 9")
+                if (wasFirst) {
+                    throw JsonParseException("Digits in a number after E/e must be between 0 and 9 - got $char")
+                }
+                break@test
             }
             builder.append(char)
+            text.nextChar()
         }
         return builder.toString().toDouble()
     }
 
     private fun parseString(text: StringCharIterator): String {
+        text.skipWhitespaces()
         if (text.nextChar() != '"') {
             throw JsonParseException("String must start with \"")
         }

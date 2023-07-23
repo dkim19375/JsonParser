@@ -38,4 +38,23 @@ class JsonPrimitive(private val primitive: Any?) : JsonElement() {
     fun asBoolean(): Boolean = primitive as? Boolean ?: primitive.toString().toBoolean()
 
     fun asNull(): Nothing? = null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as JsonPrimitive
+
+        return primitive == other.primitive
+    }
+
+    override fun hashCode(): Int {
+        return primitive?.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+        return "JsonPrimitive(primitive=${
+            if (primitive is String) "\"$primitive\"" else primitive
+        })"
+    }
 }
