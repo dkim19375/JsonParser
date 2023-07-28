@@ -25,7 +25,13 @@
 package me.dkim19375.jsonparser.element
 
 class JsonPrimitive(private val primitive: Any?) : JsonElement() {
+    fun getValue(): Any? = primitive
+
+    fun isString(): Boolean = primitive is String
+
     fun asString(): String = primitive as String
+
+    fun isNumber(): Boolean = primitive is Number
 
     fun asInt(): Int = primitive as? Int ?: (primitive as Number).toInt()
 

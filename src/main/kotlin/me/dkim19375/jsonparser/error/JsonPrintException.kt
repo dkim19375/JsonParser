@@ -22,37 +22,6 @@
  * SOFTWARE.
  */
 
-package me.dkim19375.jsonparser.util
+package me.dkim19375.jsonparser.error
 
-class StringCharIterator(private val string: String) : CharIterator() {
-
-    private var index = 0
-
-    override fun hasNext(): Boolean = index < string.length
-
-    override fun nextChar(): Char = string[index++]
-
-    fun skipWhitespaces() {
-        while (peekOrNull()?.isWhitespace() == true) {
-            index++
-        }
-    }
-
-    fun nextCharOrNull(): Char? = if (hasNext()) nextChar() else null
-
-    fun peek(): Char = string[index]
-
-    fun peekOrNull(): Char? = if (hasNext()) peek() else null
-
-    fun attemptGetText(text: String, fail: () -> Unit): Boolean {
-        for (char in text) {
-            if (nextCharOrNull() != char) {
-                fail()
-                return false
-            }
-        }
-        return true
-    }
-
-    fun getRemainingText(): String = string.substring(index)
-}
+class JsonPrintException(message: String? = null, cause: Throwable? = null) : JsonException(message, cause)

@@ -22,37 +22,30 @@
  * SOFTWARE.
  */
 
-package me.dkim19375.jsonparser.util
+package me.dkim19375.jsonparser.benchmark
 
-class StringCharIterator(private val string: String) : CharIterator() {
+import me.dkim19375.jsonparser.state.PrintingState
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.infra.Blackhole
 
-    private var index = 0
+@State(Scope.Benchmark)
+open class PrintingCompactBenchmarks {
 
-    override fun hasNext(): Boolean = index < string.length
-
-    override fun nextChar(): Char = string[index++]
-
-    fun skipWhitespaces() {
-        while (peekOrNull()?.isWhitespace() == true) {
-            index++
-        }
+    @Benchmark
+    fun jsonParser(blackHole: Blackhole, printingState: PrintingState) {
+        blackHole.consume(printingState.jsonPrinter.print(printingState.jsonElement))
     }
 
-    fun nextCharOrNull(): Char? = if (hasNext()) nextChar() else null
-
-    fun peek(): Char = string[index]
-
-    fun peekOrNull(): Char? = if (hasNext()) peek() else null
-
-    fun attemptGetText(text: String, fail: () -> Unit): Boolean {
-        for (char in text) {
-            if (nextCharOrNull() != char) {
-                fail()
-                return false
-            }
-        }
-        return true
+    @Benchmark
+    fun gson(blackHole: Blackhole, printingState: PrintingState) {
+        blackHole.consume(printingState.gsonInstance.toJson(printingState.gsonJsonElement))
     }
 
-    fun getRemainingText(): String = string.substring(index)
+    @Benchmark
+    fun jackson(blackHole: Blackhole, printingState: PrintingState) {
+        blackHole.consume(printingState.jacksonObjectWriter.writeValueAsString(printingState.jacksonJsonNode))
+    }
+
 }

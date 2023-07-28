@@ -58,7 +58,7 @@ object JsonParser {
             throw JsonParseException("Object must start with {")
         }
         var key = ""
-        val map = hashMapOf<String, JsonElement>()
+        val map = linkedMapOf<String, JsonElement>()
         var endsWithComma = false
         var endsWithValue = false
         var endsWithKey = false
