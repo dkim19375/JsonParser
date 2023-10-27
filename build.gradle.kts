@@ -4,7 +4,7 @@ import me.dkim19375.dkimgradle.util.setupJava
 plugins {
     application
     kotlin("jvm") version "1.9.10"
-    id("me.champeau.jmh") version "0.7.1"
+    id("me.champeau.jmh") version "0.7.2"
     id("org.cadixdev.licenser") version "0.6.1"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.github.dkim19375.dkim-gradle") version "1.3.7"
