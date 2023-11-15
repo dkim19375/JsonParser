@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.jetbrains:annotations:24.0.1")
+    compileOnly("org.jetbrains:annotations:24.1.0")
 
     implementation("io.github.dkim19375:dkimcore:1.4.2")
 
