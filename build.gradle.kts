@@ -28,7 +28,7 @@ dependencies {
     implementation("io.github.dkim19375:dkimcore:1.4.2")
 
     jmh("com.google.code.gson:gson:2.10.1")
-    jmh("com.fasterxml.jackson.core:jackson-databind:2.15.3")
+    jmh("com.fasterxml.jackson.core:jackson-databind:2.16.0")
 
     testImplementation(kotlin("test"))
 }
