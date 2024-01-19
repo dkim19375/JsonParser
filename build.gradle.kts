@@ -25,7 +25,7 @@ repositories {
 dependencies {
     compileOnly("org.jetbrains:annotations:24.1.0")
 
-    implementation("io.github.dkim19375:dkimcore:1.4.2")
+    implementation("io.github.dkim19375:dkimcore:1.5.0")
 
     jmh("com.google.code.gson:gson:2.10.1")
     jmh("com.fasterxml.jackson.core:jackson-databind:2.16.1")
