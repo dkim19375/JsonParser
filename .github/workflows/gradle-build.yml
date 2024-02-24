@@ -22,7 +22,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew checkLicenses clean shadowJar
       - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: Built JAR
           path: build/libs/*.jar
