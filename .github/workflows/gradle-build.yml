@@ -21,9 +21,3 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew checkLicenses clean shadowJar
-      - name: Upload a Build Artifact
-        uses: actions/upload-artifact@v4.3.1
-        with:
-          name: Built JAR
-          path: build/libs/*.jar
-          if-no-files-found: error
